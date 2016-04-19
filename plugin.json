@@ -9,7 +9,9 @@
         { "hook": "filter:email.send", "method": "send" },
         { "hook": "filter:admin.header.build", "method": "admin.menu" },
         { "hook": "static:app.load", "method": "init"},
-        { "hook": "action:settings.set", "method": "reloadSettings" }
+        { "hook": "action:settings.set", "method": "reloadSettings" },
+        { "hook": "action:user.create", "method": "actionUserCreate"},
+        { "hook": "action:user.updateProfile", "method": "actionUserUpdateProfile"}
     ],
     "compatibility": "~1.0.0"
 }

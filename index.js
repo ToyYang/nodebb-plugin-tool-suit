@@ -2,10 +2,13 @@
 
 var winston = module.parent.require('winston'),
     meta = module.parent.require('./meta'),
+    db   = module.parent.require('./database'),
 
     nodemailer = require('nodemailer'),
     API = {};
 
+var DEFAULT_PUB = 'ToolSuit:Default:ListPub';
+var DEFAULT_SUB = 'ToolSuit:Default:ListSub';
 
 var settings = {};
 
@@ -28,7 +31,7 @@ API.send = function(data, callback) {
     var pass = settings['emailer:local:password'];
 
     var transportOptions = {
-		pool:true,
+        pool:true,
         host: settings['emailer:local:host'],
         port: settings['emailer:local:port'],
         secure: settings['emailer:local:secure'] === 'on'
@@ -55,7 +58,7 @@ API.send = function(data, callback) {
             winston.verbose('[emailer.smtp] Sent `' + data.template + '` email to uid ' + data.uid);
         } else {
             winston.warn('[emailer.smtp] Unable to send `' + data.template + '` email to uid ' + data.uid + '!!');
-          }
+        }
         callback(err, data);
     });
 };
@@ -79,8 +82,49 @@ API.reloadSettings = function(hash) {
                 return winston.error(err);
             }
             settings = sts;
+
+            if (API.subscribeHandler) {
+                clearTimeout(API.subscribeHandler);
+            }
+            if (settings['toolSuit:openPubSub'] === 'on') {
+                API.subscribeHandler = setInterval(API.subscribe, 2000);
+            }
         });
     }
+};
+
+API.actionUserCreate = function(userData) {
+    if (settings['toolSuit:openPubSub'] !== 'on') {
+        return;
+    }
+    //console.log('actionUserCreate:', userData);
+    var pubChannel = settings['toolSuit:listPub'] ? settings['toolSuit:listPub'] : DEFAULT_PUB;
+    db.listPrepend(pubChannel, JSON.stringify({k: 1, v: userData}), function(err) {
+        if (err) {
+            console.log('ActionUserCreate failed: ', err);
+        }
+    });
+};
+
+API.actionUserUpdateProfile = function(userData) { // {data: data, uid: uid}
+    if (settings['toolSuit:openPubSub'] !== 'on') {
+        return;
+    }
+    //console.log('actionUserUpdateProfile:', userData);
+    var pubChannel = settings['toolSuit:listPub'] ? settings['toolSuit:listPub'] : DEFAULT_PUB;
+    db.listPrepend(pubChannel, JSON.stringify({k: 2, v: userData}), function(err) {
+        if (err) {
+            console.log('ActionUserUpdateProfile failed: ', err);
+        }
+    });
+};
+
+API.subscribe = function() {
+    var subChannel = settings['toolSuit:listSub'] ? settings['toolSuit:listSub'] : DEFAULT_SUB;
+    db.listRemoveLast(subChannel, function(err, data) {
+        console.log('err: ', err, 'data: ', data);
+        // TODO
+    });
 };
 
 module.exports = API;

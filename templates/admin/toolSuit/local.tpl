@@ -45,6 +45,26 @@
 					</label>
 				</div>
 			</div>
+			<div class="col-sm-12">
+				<div class="form-group">
+					<label for="toolSuit:listPub">DB Pub Channel</label>
+					<input type="text" class="form-control" id="toolSuit:listPub" name="toolSuit:listPub" />
+				</div>
+			</div>
+			<div class="col-sm-12">
+				<div class="form-group">
+					<label for="toolSuit:listSub">DB Sub Channel</label>
+					<input type="text" class="form-control" id="toolSuit:listSub" name="toolSuit:listSub" />
+				</div>
+			</div>
+			<div class="col-sm-12">
+				<div class="form-group">
+					<label>
+						<input type="checkbox" id="toolSuit:openPubSub" name="toolSuit:openPubSub"/>
+						 Open Pub/Sub
+					</label>
+				</div>
+			</div>
 		</div>
 
 		<button class="btn btn-lg btn-primary" id="save">SAVE</button>
