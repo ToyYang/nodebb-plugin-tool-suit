@@ -73,7 +73,7 @@ API.admin = {
 };
 
 API.reloadSettings = function(hash) {
-    if (!hash || hash === 'settings:writeapi') {
+    if (!hash || hash.plugin === 'k68_tool_suit') {
         meta.settings.get('k68_tool_suit', function(err, sts) {
             if (err) {
                 return winston.error(err);
