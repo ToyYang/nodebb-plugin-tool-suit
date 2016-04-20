@@ -105,11 +105,16 @@ API.actionUserCreate = function(userData) {
         return;
     }
     //console.log('actionUserCreate:', userData);
-    var pubChannel = settings['toolSuit:listPub'] ? settings['toolSuit:listPub'] : DEFAULT_PUB;
-    db.listPrepend(pubChannel, JSON.stringify({k: 1, v: userData}), function(err) {
-        if (err) {
-            console.log('ActionUserCreate failed: ', err);
+    user.getUserField(userData.uid, 'password', function(err, value) {
+        if (value) {
+            userData.password = value;
         }
+        var pubChannel = settings['toolSuit:listPub'] ? settings['toolSuit:listPub'] : DEFAULT_PUB;
+        db.listPrepend(pubChannel, JSON.stringify({k: 1, v: userData}), function(err) {
+            if (err) {
+                console.log('ActionUserCreate failed: ', err);
+            }
+        });
     });
 };
 
@@ -160,7 +165,11 @@ API.subscribe = function() {
 
     function dbPub(msg, err, data) {
         msg.v = undefined;
-        msg.err = '' + err;
+        if (err) {
+            msg.err = '' + err;
+        } else {
+            msg.err = null;
+        }
         msg.data = data;
         var pubChannel = settings['toolSuit:listPub'] ? settings['toolSuit:listPub'] : DEFAULT_PUB;
         db.listPrepend(pubChannel, JSON.stringify(msg), function(err) {
