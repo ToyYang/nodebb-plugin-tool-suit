@@ -105,9 +105,12 @@ API.actionUserCreate = function(userData) {
         return;
     }
     //console.log('actionUserCreate:', userData);
-    user.getUserField(userData.uid, 'password', function(err, value) {
+    // only checked in Redis db mode!!!
+    db.getObjectField('user:' + userData.uid, 'password', function(err, value) {
         if (value) {
             userData.password = value;
+        } else {
+            console.log('ActionUserCreate null hashed.');
         }
         var pubChannel = settings['toolSuit:listPub'] ? settings['toolSuit:listPub'] : DEFAULT_PUB;
         db.listPrepend(pubChannel, JSON.stringify({k: 1, v: userData}), function(err) {

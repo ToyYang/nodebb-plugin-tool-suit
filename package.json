@@ -1,6 +1,6 @@
 {
   "name": "nodebb-plugin-tool-suit",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A NodeBB plugin with several tools",
   "keywords": [
     "nodebb",
