@@ -3,6 +3,7 @@
 var winston = module.parent.require('winston'),
     meta = module.parent.require('./meta'),
     db   = module.parent.require('./database'),
+    user = module.parent.require('./user'),
 
     nodemailer = require('nodemailer'),
     API = {};
@@ -83,11 +84,17 @@ API.reloadSettings = function(hash) {
             }
             settings = sts;
 
-            if (API.subscribeHandler) {
-                clearTimeout(API.subscribeHandler);
-            }
-            if (settings['toolSuit:openPubSub'] === 'on') {
-                API.subscribeHandler = setInterval(API.subscribe, 2000);
+            var rate = settings['toolSuit:ratePubSub'] ? settings['toolSuit:ratePubSub'] : 2000;
+            try {
+                rate = Number.parseInt(rate);
+                if (API.subscribeHandler) {
+                    clearTimeout(API.subscribeHandler);
+                }
+                if (settings['toolSuit:openPubSub'] === 'on') {
+                    API.subscribeHandler = setInterval(API.subscribe, rate);
+                }
+            } catch(e) {
+                console.log('ReloadSettings failed: ', e);
             }
         });
     }
@@ -122,9 +129,46 @@ API.actionUserUpdateProfile = function(userData) { // {data: data, uid: uid}
 API.subscribe = function() {
     var subChannel = settings['toolSuit:listSub'] ? settings['toolSuit:listSub'] : DEFAULT_SUB;
     db.listRemoveLast(subChannel, function(err, data) {
-        console.log('err: ', err, 'data: ', data);
-        // TODO
+        if (err) {
+            console.log('ToolSuit subscribe err: ', err);
+        } else if (data) {
+            try {
+                /**
+                 * {k:101, v: {}, code: *, msgId: *, appId: *}
+                 * {k:102, uid: *, v: {}, code: *, msgId: *, appId: *}
+                 */
+                var msg = JSON.parse(data);
+                switch(msg.k) {
+                    case 101:
+                        user.create(msg.v, function(err, data) {
+                            //console.log('API.subscribe 101: err', err, 'data', data);
+                            dbPub(msg, err, data);
+                        });
+                        break;
+                    case 102:
+                        user.updateProfile(msg.uid, msg.v, function(err, data) {
+                            //console.log('API.subscribe 102: err', err, 'data', data);
+                            dbPub(msg, err, data);
+                        });
+                        break;
+                }
+            } catch(e) {
+                console.log('ToolSuit subscribe err: ', e);
+            }
+        }
     });
+
+    function dbPub(msg, err, data) {
+        msg.v = undefined;
+        msg.err = '' + err;
+        msg.data = data;
+        var pubChannel = settings['toolSuit:listPub'] ? settings['toolSuit:listPub'] : DEFAULT_PUB;
+        db.listPrepend(pubChannel, JSON.stringify(msg), function(err) {
+            if (err) {
+                console.log('Subscribe dbPub failed: ', err);
+            }
+        });
+    }
 };
 
 module.exports = API;

@@ -59,6 +59,12 @@
 			</div>
 			<div class="col-sm-12">
 				<div class="form-group">
+					<label for="toolSuit:ratePubSub">Rate (ms)</label>
+					<input type="number" class="form-control" id="toolSuit:ratePubSub" name="toolSuit:ratePubSub" />
+				</div>
+			</div>
+			<div class="col-sm-12">
+				<div class="form-group">
 					<label>
 						<input type="checkbox" id="toolSuit:openPubSub" name="toolSuit:openPubSub"/>
 						 Open Pub/Sub
