@@ -138,7 +138,7 @@ API.subscribe = function() {
     var subChannel = settings['toolSuit:listSub'] ? settings['toolSuit:listSub'] : DEFAULT_SUB;
     db.listRemoveLast(subChannel, function(err, data) {
         if (err) {
-            console.log('ToolSuit subscribe err: ', err);
+            console.log('ToolSuit subscribe err position1: ', err);
         } else if (data) {
             try {
                 /**
@@ -160,26 +160,35 @@ API.subscribe = function() {
                         });
                         break;
                 }
-            } catch(e) {
-                console.log('ToolSuit subscribe err: ', e);
+            } catch(err2) {
+                console.log('ToolSuit subscribe err position2: ', err2);
+                try {
+                    dbPub(JSON.parse(data), err2, null);
+                } catch(err3) {
+                    console.log('ToolSuit subscribe err position3: ', err3);
+                }
             }
         }
     });
 
     function dbPub(msg, err, data) {
-        msg.v = undefined;
-        if (err) {
-            msg.err = '' + err;
-        } else {
-            msg.err = null;
-        }
-        msg.data = data;
-        var pubChannel = settings['toolSuit:listPub'] ? settings['toolSuit:listPub'] : DEFAULT_PUB;
-        db.listPrepend(pubChannel, JSON.stringify(msg), function(err) {
+        try {
+            msg.v = undefined;
             if (err) {
-                console.log('Subscribe dbPub failed: ', err);
+                msg.err = '' + err;
+            } else {
+                msg.err = null;
             }
-        });
+            msg.data = data;
+            var pubChannel = settings['toolSuit:listPub'] ? settings['toolSuit:listPub'] : DEFAULT_PUB;
+            db.listPrepend(pubChannel, JSON.stringify(msg), function (err1) {
+                if (err1) {
+                    console.log('Subscribe dbPub failed position1: ', err1);
+                }
+            });
+        } catch(err2) {
+            console.log('Subscribe dbPub failed position2: ', err2);
+        }
     }
 };
 
